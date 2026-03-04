@@ -1,59 +1,24 @@
 # Python Project Management CLI Tool
 
-A command-line application for managing users, projects, and tasks. This was my final project for my Python programming course.
+This is my final project for my Python programming course. It's a command-line tool for keeping track of users, projects, and tasks. Everything saves to a JSON file so your data sticks around between runs.
+
+I'm actually pretty happy with how it turned out!
 
 ## What it does
 
-- Create and manage users
-- Add projects to users
-- Add tasks to projects and track their status
-- Everything saves to a JSON file automatically
-- Nice looking tables in the terminal (using the rich library)
-- Can parse dates in different formats
-- Has tests (using pytest)
-
-## How the code is organized
-
-```
-.
-├── main.py              # CLI entry point (argparse subcommands)
-├── models/
-│   ├── person.py        # Base Person class
-│   ├── user.py          # User (extends Person) — owns Projects
-│   ├── project.py       # Project — owns Tasks, tracks completion %
-│   └── task.py          # Task with pending/in_progress/complete lifecycle
-├── utils/
-│   ├── storage.py       # JSON load/save via Storage class
-│   ├── display.py       # Rich-powered terminal output (tables, panels)
-│   └── validators.py    # Email and date validation helpers
-├── tests/
-│   ├── test_models.py   # Unit tests for all model classes
-│   └── test_cli.py      # Unit tests for all CLI subcommands
-├── data/                # Auto-created; stores users.json at runtime
-├── requirements.txt
-└── README.md
-```
-
-## Setup Instructions
-
-1. Clone or download this repository
-2. Create a virtual environment:
-```bash
-python3 -m venv venv
-source venv/bin/activate        # on Mac/Linux
-# venv\Scripts\activate         # on Windows
-```
-3. Install the required packages:
-```bash
-pip install -r requirements.txt
-```
+- Create users and give them projects
+- Add tasks to projects and move them through pending → in progress → complete
+- See a completion percentage for each project
+- Nice coloured tables in the terminal (I used a library called `rich` for this)
+- Flexible date input - you can type "Dec 31 2025" instead of having to write "2025-12-31"
+- All data saves automatically, nothing gets lost when you close the terminal
 
 ## How to Run
 
 ```bash
 python main.py <command> [options]
-python main.py --help
-python main.py <command> --help
+python main.py --help               # shows all available commands
+python main.py <command> --help     # shows options for a specific command
 ```
 
 ### User Commands
@@ -64,79 +29,27 @@ python main.py list-users
 python main.py delete-user --name "Alex"
 ```
 
-### Project Commands
-
-```bash
-python main.py add-project --user "Alex" --title "CLI Tool" \
-    --description "Build the CLI" --due-date "2025-12-31"
-
-python main.py list-projects                  # all users
-python main.py list-projects --user "Alex"    # filtered
-
-python main.py view-project --title "CLI Tool" --user "Alex"
-
-python main.py update-project --user "Alex" --title "CLI Tool" \
-    --description "Updated desc" --due-date "2026-01-01"
-
-python main.py delete-project --user "Alex" --title "CLI Tool"
-```
-
-### Task Commands
-
-```bash
-python main.py add-task --project "CLI Tool" --title "Write tests" \
-    --assigned-to "Alex" --user "Alex"
-
-python main.py list-tasks --project "CLI Tool" --user "Alex"
-python main.py start-task    --project "CLI Tool" --task "Write tests" --user "Alex"
-python main.py complete-task --project "CLI Tool" --task "Write tests" --user "Alex"
-python main.py delete-task   --project "CLI Tool" --task "Write tests" --user "Alex"
-```
-
-### Example Usage
-
-```bash
-python main.py add-user --name "Alex" --email "alex@example.com"
-python main.py add-project --user "Alex" --title "CLI Tool" --due-date "2025-12-31"
-python main.py add-task --project "CLI Tool" --title "Implement add-task" --user "Alex"
-python main.py add-task --project "CLI Tool" --title "Write tests" --user "Alex"
-python main.py start-task    --project "CLI Tool" --task "Implement add-task" --user "Alex"
-python main.py complete-task --project "CLI Tool" --task "Implement add-task" --user "Alex"
-python main.py view-project  --title "CLI Tool" --user "Alex"
-```
-
-## Testing
-
-To run the tests I wrote:
+## Running the Tests
 
 ```bash
 source venv/bin/activate
 pytest tests/ -v
 ```
 
-## Design Notes
+There are 78 tests total covering all the models and CLI commands. Writing tests was actually really useful - I caught a bug where duplicate task checking was case-sensitive when it shouldn't have been.
 
-I used object-oriented programming concepts we learned in class:
-- **Person** is the base class with name and email
-- **User** inherits from Person and can have multiple projects
-- **Project** contains multiple tasks and calculates completion percentage
-- **Task** has three statuses: pending, in_progress, and complete
+## Design Decisions
 
-## Libraries Used
+I used OOP concepts we covered in class:
+- **Person** is the base class (just name + email)
+- **User** inherits from Person and owns a list of projects
+- **Project** holds tasks and calculates a completion percentage
+- **Task** has three statuses: `pending`, `in_progress`, and `complete`
 
-| Package | Purpose |
-|---|---|
-| `rich` | Colour-coded tables, panels, status messages in terminal |
-| `python-dateutil` | Flexible date string parsing for `--due-date` values |
-| `pytest` | Unit testing for models and CLI command handlers |
+I also used a registry pattern for the User class (a class-level dictionary that keeps track of all users) which I found online. It acts like a simple in-memory database without needing SQLite or anything like that.
 
-## How Data is Saved
+## How Saving Works
 
-All data gets saved to `data/users.json` in a nested structure. The file is created automatically when you first add a user. I added error handling for when the file doesn't exist or has bad JSON.
+Everything gets stored in `data/users.json`. The file is created automatically the first time you add a user - you don't need to create it yourself. The structure is nested: users → projects → tasks. When you run any command it loads the whole file, makes the change, and saves it back.
 
-## Things I Know Could Be Better
-
-- Project titles need to be unique per user (but different users can have projects with the same name)
-- The --user flag helps when multiple users have projects with the same name
-- The JSON file doesn't handle multiple people writing to it at the same time (but that's probably fine for a CLI tool)
-- I could have added more features like task priorities or deadlines but ran out of time
+I know rewriting the entire file every time isn't the most efficient approach but for a CLI tool used by one person it's totally fine.
