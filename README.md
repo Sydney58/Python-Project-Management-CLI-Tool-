@@ -1,6 +1,6 @@
 # Python Project Management CLI Tool
 
-This is my final project for my Python programming course. It's a command-line tool for keeping track of users, projects, and tasks. Everything saves to a JSON file so your data sticks around between runs.
+ It's a command-line tool for keeping track of users, projects, and tasks. Everything saves to a JSON file so your data sticks around between runs.
 
 I'm actually pretty happy with how it turned out!
 
